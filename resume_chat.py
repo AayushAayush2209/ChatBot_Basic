@@ -20,6 +20,11 @@ def add_thread(thread_id):
     if thread_id not in st.session_state['chat_threads']:
         st.session_state['chat_threads'].append(thread_id) 
 
+def load_conversation(thread_id):
+    return chatbot.get_state(
+        config={'configurable': {'thread_id': thread_id}}
+    ).values['messages']  
+
 CONFIG = {"configurable": {"thread_id": st.session_state["thread_id"]}}
 
 if "message_history" not in st.session_state:
@@ -41,8 +46,22 @@ if st.button("New Chat"):
 st.header("New Conversation")
 
 for thread_id in st.session_state["chat_thread"]:
-    st.sidebar.button(str(thread_id))
+    if st.sidebar.button(str(thread_id)):
+        messages=load_conversation(thread_id)
 
+        temp_messages=[]
+
+        for msg in messages:
+            if isinstance(msg,HumanMessage):
+                role="user"
+            else:
+                role="assistant"
+
+            temp_messages.append({"role":role, "content":msg.content})
+
+        st.session_state["message_history"]=temp_messages
+
+        
 # Display previous messages
 for message in st.session_state["message_history"]:
     with st.chat_message(message["role"]):
